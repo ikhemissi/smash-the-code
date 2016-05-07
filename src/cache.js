@@ -13,7 +13,7 @@ class Cache {
   }
 
   set(row, column, value) {
-    this._data.set(this._id(row, column));
+    this._data.set(this._id(row, column), value);
   }
 
   del(row, column) {

@@ -2,6 +2,9 @@ import Grid from './grid';
 import { SIMULATION_DEPTH } from './config';
 import { debug } from './utils';
 
+let nbSimulationsReal = 0;
+let nbSimulationsTotal = 0;
+
 class Simulator {
 
   constructor(grid, debugMode) { // 6x12 grid
@@ -74,16 +77,24 @@ class Simulator {
   }
 
   _generateTestSuite(blockA, blockB) {
-    let suite = [];
-    for (let column = 0; column < 6; column++) {
-      for (let rotation = 0; rotation < 3; rotation++) {
-        if ((rotation !== 0 && column === 5) || (rotation !== 2 && column === 0)) {
-          suite.push([column, rotation]);
-        }
-      }
-    }
-
-    return suite;
+    // let suite = [];
+    // for (let column = 0; column <= 5; column++) {
+    //   for (let rotation = 0; rotation <= 3; rotation++) {
+    //     if (!(rotation === 0 && column === 5) && !(rotation === 2 && column === 0)) {
+    //       suite.push([column, rotation]);
+    //     }
+    //   }
+    // }
+    //
+    // return suite;
+    return [
+      [ 0, 0 ], [ 0, 1 ], [ 0, 3 ],
+      [ 1, 0 ], [ 1, 1 ], [ 1, 2 ], [ 1, 3 ],
+      [ 2, 0 ], [ 2, 1 ], [ 2, 2 ], [ 2, 3 ],
+      [ 3, 0 ], [ 3, 1 ], [ 3, 2 ], [ 3, 3 ],
+      [ 4, 0 ], [ 4, 1 ], [ 4, 2 ], [ 4, 3 ],
+      [ 5, 1 ], [ 5, 2 ], [ 5, 3 ]
+    ];
   }
 
   // TODO : take Nuisance points into account
@@ -138,23 +149,31 @@ class Simulator {
   }
 
   _selectMove(moves) {
+    // console.log('Selecting the best move from', moves);
     // Select random index
     // TODO : take into account the sizes of of each column (prefer empty columns)
+    // TODO : prefer horizontal settings 0 and 2 ?!
     if (moves && moves.length) {
-      return undefined;
-      const movesByColumn = [[], [], [], [], [], []];
-      const columnBlocks = [7, 7, 7, 7, 7, 7]; // default value is 7 (more than column maximum blocks)
-      for (let i = 0, l = moves.length; i < l; i++) {
-        let move = moves[i];
-        let column = move[0];
-        movesByColumn[column].push(move);
-        columnBlocks[column] = this.grid.getSize(column);
-      }
 
-      const lestFilledIndex = this._indexOfMin(columnBlocks);
-      const chosenColumnMoves = movesByColumn[lestFilledIndex];
-      const randomIndex = this._getRandomIndex(chosenColumnMoves.length);
-      return chosenColumnMoves[randomIndex];
+      if (moves.length === 1) {
+        return moves[0];
+
+      } else {
+        const movesByColumn = [[], [], [], [], [], []];
+        const columnBlocks = [7, 7, 7, 7, 7, 7]; // default value is 7 (more than column maximum blocks)
+        for (let i = 0, l = moves.length; i < l; i++) {
+          let move = moves[i];
+          let column = move[0];
+          movesByColumn[column].push(move);
+          columnBlocks[column] = this.grid.getSize(column);
+        }
+
+        const lestFilledIndex = this._indexOfMin(columnBlocks);
+        const chosenColumnMoves = movesByColumn[lestFilledIndex];
+        const randomIndex = this._getRandomIndex(chosenColumnMoves.length);
+        // console.log('> choosing', chosenColumnMoves[randomIndex]);
+        return chosenColumnMoves[randomIndex];
+      }
     }
 
     return this._emergencyMove();
@@ -166,9 +185,18 @@ class Simulator {
     return [0, emergencyColumn, emergencyRotation];
   }
 
-  _simulate(inputs, previousMoves = []) {
+  // _padding(spacing) {
+  //   let padding = '';
+  //   for (let i = 0; i < spacing; i++) {
+  //     padding += '  ';
+  //   }
+  //   return padding;
+  // }
 
+  _simulate(inputs) {
+    nbSimulationsTotal++;
     if (inputs && inputs.length) {
+      nbSimulationsReal++;
       // console.log('>>>>>>>>>>>>>>>>>>>', SIMULATION_DEPTH - inputs.length + 1, '>>>>>>>>>>>>>>>>>>>');
       // console.log('Simulating the following moves', inputs, 'on', this.grid);
 
@@ -178,40 +206,48 @@ class Simulator {
       const colorB = colors[1];
       const remaining = inputs.slice(1);
 
-      let max = -1;
+      let max = 39; // a group will give at least 40 points
       let bestTests = [];
 
       const tests = this._generateTestSuite(colorA, colorB);
       // console.log('Simulation (', inputs.length, 'inputs) on top of ', previousMoves, '...');
-      if (previousMoves[0] === '5:2:0:0') {
-        // console.log('>> current grid:');
-        // console.log(this.grid);
-      }
+      // if (previousMoves[0] === '5:2:0:0') {
+      //   console.log('>> current grid:');
+      //   console.log(this.grid);
+      // }
       // console.log('----------------------', SIMULATION_DEPTH - inputs.length + 1, '----------------------');
       // console.log('----------- tests:', tests);
       // console.log('----------------------', SIMULATION_DEPTH - inputs.length + 1, '----------------------');
+
+      // const padding = this._padding(depth);
+      // console.log(padding + depth + '>');
 
       for (let i = 0, l = tests.length; i < l; i++) {
         let test = tests[i];
         let fork = this.fork();
         let stepScore = fork._add(colorA, colorB, test[0], test[1]);
-        // console.log('>> simulating with blocks', [colorA, colorB], 'and position', test, 'and got score', stepScore);
-        // console.log('=> simulation with', test, 'gave', this.grid);
-        // console.log('<<<<<<<<<<<<<<<<<<<<<<', SIMULATION_DEPTH - inputs.length + 1, '<<<<<<<<<<<<<<<<<<<<<<');
-
-        let simulation = fork._simulate(remaining, previousMoves.concat([[colorA, colorB, test[0], test[1]].join(':')]));
-        if (previousMoves[0] === '5:2:0:0') {
-          // console.log('>>>> after simulating:');
-          // console.log(fork.grid);
-        }
+        // console.log(padding + depth + '> step score is', stepScore, '. running sub-simulations ...');
         if (stepScore !== undefined) {
-          let score = stepScore + (simulation ? simulation[0] : 0);
+          // console.log('>> simulating with blocks', [colorA, colorB], 'and position', test, 'and got score', stepScore);
+          // console.log('=> simulation with', test, 'gave', this.grid);
+          // console.log('<<<<<<<<<<<<<<<<<<<<<<', SIMULATION_DEPTH - inputs.length + 1, '<<<<<<<<<<<<<<<<<<<<<<');
+          let simulation = fork._simulate(remaining);
+          // console.log(padding + depth + '>> simulation result is', simulation);
+
+          // if (previousMoves[0] === '5:2:0:0') {
+            // console.log('>>>> after simulating:');
+          //   console.log(fork.grid);
+          // }
+          let score = stepScore;
+          if (simulation) {
+            score += simulation[0];
+          }
+
           if (score > max) {
             max = score;
             bestTests = [test];
 
           } else if (score == max) {
-            max = score;
             bestTests.push(test);
           }
         }
@@ -219,7 +255,7 @@ class Simulator {
 
       if (bestTests.length) {
         const nextMove = this._selectMove(bestTests);
-        // console.log('Simulation (', inputs.length, 'inputs) entries ended in', Date.now() - start, 'with yield estimation of', max, 'if playing', [colorA, colorB], 'with position', nextMove);
+        // console.log('Simulation (', inputs.length, 'inputs) entries ended in', Date.now() - start, 'with yield estimation of', max, 'if playing', [colorA, colorB], 'with position', nextMove, '(from', bestTests, ')');
         return nextMove ? [max, nextMove[0], nextMove[1]] : this._emergencyMove();
       }
     }
@@ -230,11 +266,6 @@ class Simulator {
   load(map) {
     this.grid = this.grid || new Grid();
     this.grid.loadFrom(map);
-  }
-
-  _getRandomSetting() {
-    printErr('random!');
-    return [0, 0];
   }
 
   bestMove(inputs, callback) { // inputs is an array of 8 pairs of colors
@@ -260,6 +291,7 @@ class Simulator {
     // console.log('Simulation ended in ', Date.now() - start, 'ms with result', simulation);
     if (!this._ended) {
       this._ended = true;
+      printErr('simulations:' + nbSimulationsReal + '/' + nbSimulationsTotal);
       callback(setting);
     }
   }
