@@ -1,6 +1,7 @@
 import Grid from './grid';
 import { SIMULATION_DEPTH } from './config';
-import { debug } from './utils';
+import { debug, getRandomIndex } from './utils';
+import { renderGene } from './genes';
 
 // let nbSimulationsReal = 0;
 // let nbSimulationsTotal = 0;
@@ -10,6 +11,7 @@ class Simulator {
   constructor(grid, debugMode) { // 6x12 grid
     this.debugMode = debugMode;
     this.grid = grid ? grid.clone() : undefined;
+    this._ended = false;
 
     //this._debug('New Simulator with map :');
     //this._debug(this.grid);
@@ -170,10 +172,6 @@ class Simulator {
     return undefined; // If for whatever reason, the game can't continue
   }
 
-  _getRandomIndex(arraySize) {
-    return Math.floor(Math.random() * arraySize);
-  }
-
   _selectMove(moves) {
     // console.log('Selecting the best move from', moves);
     // Select random index
@@ -292,6 +290,39 @@ class Simulator {
   load(map) {
     this.grid = this.grid || new Grid();
     this.grid.loadFrom(map);
+  }
+
+  execute(inputs, moves) {
+    // printErr('adding',[blockA, blockB], 'with', [column, rotation], '->', colorA, 'to', columnA, 'and', colorB, 'to', columnB);
+    // printErr('executing', inputs, 'with moves', moves);
+    let score = 0;
+    let fork = this.fork();
+    let ended = false;
+    for (let i = 0, l = moves.length; (i < l) && !ended; i++) {
+      let move = renderGene(moves[i]);
+      // printErr('move', moves[i], '->', move);
+      let moveScore = fork._add(inputs[i][0], inputs[i][1], move[0], move[1]);
+      if (moveScore !== undefined) {
+        score += moveScore;
+      } else {
+        ended = true;
+      }
+    }
+    fork._score = score;
+    fork._ended = ended;
+    return fork;
+  }
+
+  score() {
+    return this._score;
+  }
+
+  sizes() {
+    return this.grid.sizes();
+  }
+
+  ended() {
+    return this._ended;
   }
 
   bestMove(inputs, callback) { // inputs is an array of 8 pairs of colors

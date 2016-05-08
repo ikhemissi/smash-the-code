@@ -58,6 +58,10 @@ class Grid {
     return this._sizes[column];
   }
 
+  sizes() {
+    return this._sizes;
+  }
+
   cleanup(cells = []) {
     // console.log('Cleaning up the cells ' + JSON.stringify(cells));
     const moved = new Set();

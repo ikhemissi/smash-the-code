@@ -1,10 +1,13 @@
 import Simulator from './simulator';
+import Ai from './ai';
+import { TIMEOUT } from './config';
+import { randomGene, renderGene } from './genes';
+
 
 class Engine {
 
   constructor() {
-    // this._history = '';
-    this._simulator = new Simulator();
+    this._brain = new Ai();
   }
 
   _cleanupEntry(input) {
@@ -40,20 +43,22 @@ class Engine {
   start() {
     // game loop
     while (true) {
-      let start = Date.now();
+
       let inputs = this._getInputs();
       let myMap = this._getCharacterMap();
       let ennemyMap = this._getCharacterMap();
-      this._simulator.load(myMap);
-      // this._history += '[' + inputs[0] + '],';
-      this._simulator.bestMove(inputs, (move) => { // move = [cost, position, rotation]
-        printErr(inputs[0], '->', move, 'in', Date.now() - start);
-        // printErr(this._history);
-        print(move[1] + ' ' + move[2]);
-      }); // bestPosition(myMap, ennemyMap, inputs)
-      // while (Date.now() < (start + 90)) {
-      //   // Security measure to prevent the case where we don't return anything !!
-      // }
+      let start = Date.now();
+
+      this._brain.load(myMap);
+      let move = this._brain.bestMove(inputs, start + TIMEOUT); // [[column, rotation], fitness, generations]
+      // printErr('move:', move);
+      if (!move || move[0] === undefined || move[0][0] === undefined || move[0][1] === undefined) {
+        move = [renderGene(randomGene()), 0, 0];
+      }
+
+      let stats = move[1] + ' (' + move[2] + ') in ' + (Date.now() - start) + 'ms';
+      // printErr(inputs[0], '->', move[0], 'with', stats);
+      print(move[0][0] + ' ' + move[0][1], stats);
     }
   }
 }
