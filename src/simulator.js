@@ -2,8 +2,8 @@ import Grid from './grid';
 import { SIMULATION_DEPTH } from './config';
 import { debug } from './utils';
 
-let nbSimulationsReal = 0;
-let nbSimulationsTotal = 0;
+// let nbSimulationsReal = 0;
+// let nbSimulationsTotal = 0;
 
 class Simulator {
 
@@ -76,7 +76,7 @@ class Simulator {
     return array.indexOf(Math.min.apply(null, array));
   }
 
-  _generateTestSuite(blockA, blockB) {
+  _generateTestSuite(depth) {
     // let suite = [];
     // for (let column = 0; column <= 5; column++) {
     //   for (let rotation = 0; rotation <= 3; rotation++) {
@@ -87,14 +87,40 @@ class Simulator {
     // }
     //
     // return suite;
-    return [
-      [ 0, 0 ], [ 0, 1 ], [ 0, 3 ],
-      [ 1, 0 ], [ 1, 1 ], [ 1, 2 ], [ 1, 3 ],
-      [ 2, 0 ], [ 2, 1 ], [ 2, 2 ], [ 2, 3 ],
-      [ 3, 0 ], [ 3, 1 ], [ 3, 2 ], [ 3, 3 ],
-      [ 4, 0 ], [ 4, 1 ], [ 4, 2 ], [ 4, 3 ],
-      [ 5, 1 ], [ 5, 2 ], [ 5, 3 ]
+    // return [
+    //   [ 0, 0 ], [ 0, 1 ], [ 0, 3 ],
+    //   [ 1, 0 ], [ 1, 1 ], [ 1, 2 ], [ 1, 3 ],
+    //   [ 2, 0 ], [ 2, 1 ], [ 2, 2 ], [ 2, 3 ],
+    //   [ 3, 0 ], [ 3, 1 ], [ 3, 2 ], [ 3, 3 ],
+    //   [ 4, 0 ], [ 4, 1 ], [ 4, 2 ], [ 4, 3 ],
+    //   [ 5, 1 ], [ 5, 2 ], [ 5, 3 ]
+    // ];
+    const tests1 = [
+      [[ 0, 0 ], [ 0, 1 ], [ 1, 1 ], [ 3, 0 ], [ 4, 1 ], [ 4, 2 ], [ 5, 1 ], [ 5, 2 ], [ 2, 0 ]],
+      [[ 1, 1 ], [ 1, 2 ], [ 0, 0 ], [ 3, 3 ], [ 4, 0 ], [ 4, 1 ], [ 5, 2 ], [ 2, 1 ], [ 2, 2 ]],
+      [[ 2, 1 ], [ 2, 2 ], [ 0, 1 ], [ 0, 3 ], [ 3, 1 ], [ 4, 3 ], [ 5, 3 ], [ 0, 0 ], [ 4, 0 ]],
+      [[ 4, 2 ], [ 4, 3 ], [ 0, 1 ], [ 2, 0 ], [ 2, 1 ], [ 1, 0 ], [ 5, 1 ], [ 3, 3 ], [ 3, 0 ]],
+      [[ 5, 1 ], [ 5, 2 ], [ 0, 3 ], [ 0, 0 ], [ 2, 0 ], [ 2, 1 ], [ 4, 0 ], [ 3, 0 ], [ 3, 1 ]],
+      [[ 3, 2 ], [ 3, 3 ], [ 0, 1 ], [ 2, 2 ], [ 4, 3 ], [ 4, 0 ], [ 5, 2 ], [ 1, 0 ], [ 0, 0 ]],
     ];
+    const tests2 = [
+      [[ 0, 0 ], [ 1, 1 ], [ 3, 0 ], [ 4, 1 ], [ 4, 2 ], [ 5, 1 ], [ 2, 0 ]],
+      [[ 1, 1 ], [ 0, 0 ], [ 3, 3 ], [ 4, 0 ], [ 4, 1 ], [ 5, 2 ], [ 2, 2 ]],
+      [[ 2, 1 ], [ 2, 2 ], [ 0, 1 ], [ 3, 1 ], [ 5, 3 ], [ 0, 0 ], [ 4, 0 ]],
+      [[ 4, 2 ], [ 0, 1 ], [ 2, 0 ], [ 2, 1 ], [ 1, 0 ], [ 5, 1 ], [ 3, 3 ]],
+      [[ 5, 1 ], [ 5, 2 ], [ 0, 0 ], [ 2, 0 ], [ 4, 0 ], [ 3, 0 ], [ 3, 1 ]],
+      [[ 3, 2 ], [ 0, 1 ], [ 2, 2 ], [ 4, 3 ], [ 5, 2 ], [ 1, 0 ], [ 0, 0 ]],
+    ];
+    const tests3 = [
+      [[ 0, 0 ], [ 1, 1 ], [ 3, 0 ], [ 4, 1 ], [ 5, 1 ], [ 2, 0 ]],
+      [[ 1, 1 ], [ 0, 0 ], [ 3, 3 ], [ 4, 0 ], [ 5, 2 ], [ 2, 2 ]],
+      [[ 2, 1 ], [ 0, 1 ], [ 3, 1 ], [ 5, 3 ], [ 0, 0 ], [ 4, 0 ]],
+      [[ 4, 2 ], [ 0, 1 ], [ 2, 0 ], [ 1, 0 ], [ 5, 1 ], [ 3, 3 ]],
+      [[ 5, 1 ], [ 0, 0 ], [ 2, 0 ], [ 4, 0 ], [ 3, 0 ], [ 3, 1 ]],
+      [[ 3, 2 ], [ 2, 2 ], [ 4, 3 ], [ 5, 2 ], [ 1, 0 ], [ 0, 0 ]],
+    ];
+    const randomIndex = this._getRandomIndex(tests1.length);
+    return depth < 3 ? tests1[randomIndex] : tests3[randomIndex];
   }
 
   // TODO : take Nuisance points into account
@@ -193,10 +219,10 @@ class Simulator {
   //   return padding;
   // }
 
-  _simulate(inputs) {
-    nbSimulationsTotal++;
+  _simulate(inputs, depth = 1) {
+    // nbSimulationsTotal++;
     if (inputs && inputs.length) {
-      nbSimulationsReal++;
+      // nbSimulationsReal++;
       // console.log('>>>>>>>>>>>>>>>>>>>', SIMULATION_DEPTH - inputs.length + 1, '>>>>>>>>>>>>>>>>>>>');
       // console.log('Simulating the following moves', inputs, 'on', this.grid);
 
@@ -209,7 +235,7 @@ class Simulator {
       let max = 39; // a group will give at least 40 points
       let bestTests = [];
 
-      const tests = this._generateTestSuite(colorA, colorB);
+      const tests = this._generateTestSuite(depth);
       // console.log('Simulation (', inputs.length, 'inputs) on top of ', previousMoves, '...');
       // if (previousMoves[0] === '5:2:0:0') {
       //   console.log('>> current grid:');
@@ -231,7 +257,7 @@ class Simulator {
           // console.log('>> simulating with blocks', [colorA, colorB], 'and position', test, 'and got score', stepScore);
           // console.log('=> simulation with', test, 'gave', this.grid);
           // console.log('<<<<<<<<<<<<<<<<<<<<<<', SIMULATION_DEPTH - inputs.length + 1, '<<<<<<<<<<<<<<<<<<<<<<');
-          let simulation = fork._simulate(remaining);
+          let simulation = fork._simulate(remaining, depth + 1);
           // console.log(padding + depth + '>> simulation result is', simulation);
 
           // if (previousMoves[0] === '5:2:0:0') {
@@ -291,7 +317,7 @@ class Simulator {
     // console.log('Simulation ended in ', Date.now() - start, 'ms with result', simulation);
     if (!this._ended) {
       this._ended = true;
-      printErr('simulations:' + nbSimulationsReal + '/' + nbSimulationsTotal);
+      // printErr('simulations:' + nbSimulationsReal + '/' + nbSimulationsTotal);
       callback(setting);
     }
   }
